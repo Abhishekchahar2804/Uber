@@ -10,6 +10,7 @@ const connectDB = require('./db/db');
 connectDB();
 
 const UserRouter = require('./routers/user.router');
+const CaptainRouter = require('./routers/captain.router');
 
 app.use(cors());
 app.use(express.json());
@@ -17,6 +18,7 @@ app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
 
 app.use('/users',UserRouter);
+app.use('/captains',CaptainRouter);
 
 app.get('/',(req,res)=>{
     res.send('Hello World');
