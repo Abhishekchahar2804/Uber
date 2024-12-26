@@ -36,3 +36,53 @@ module.exports.registerUser = async (req, res, next) => {
     }
     
 }
+
+module.exports.loginUser = async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+        const { email, password } = req.body;        
+        if (!email || !password) {
+            throw new Error('Form is not completed');
+        }
+
+        const user = await userModel.findOne({ email }).select('+password');
+
+        if(!user){
+            throw new Error('Invalid email or password');
+        }
+
+        const isPasswordMatch = await user.comparePassword(password);
+
+        if(!isPasswordMatch){        
+            throw new Error('Invalid email or password');
+        }
+
+        const token=await user.generateAuthToken();
+        res.status(200).json({ user, token });
+    }catch (error) {
+        console.log(error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
+module.exports.getProfile = async (req, res, next) => {
+    try {
+        res.status(200).json({ user: req.user });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
+module.exports.logoutUser = async (req, res, next) => {
+    
+    const token = req.cookies.token || req.headers.authorization.split(' ')[ 1 ];
+
+    await blackListTokenModel.create({ token });
+    res.clearCookie('token');
+    res.status(200).json({ message: 'Logged out' });
+
+}
